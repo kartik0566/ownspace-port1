@@ -9,6 +9,9 @@ import {
 export const staticPortfolioUsername =
   import.meta.env.VITE_PORTFOLIO_USERNAME || 'kartik';
 
+const isSchoolEntry = (education) =>
+  education.school.includes('Vatsalya Public School');
+
 export const staticPortfolio = {
   username: staticPortfolioUsername,
   about: {
@@ -43,14 +46,12 @@ export const staticPortfolio = {
   })),
   education: educationItems.map((education) => ({
     _id: `static-education-${education.id}`,
-    institution: education.school.includes('Vatsalya Public School')
-      ? 'Test School'
-      : education.school,
-    degree: education.degree,
-    duration: education.date,
-    description: education.desc,
+    institution: isSchoolEntry(education) ? 'Test School' : education.school,
+    degree: isSchoolEntry(education) ? 'Unknown' : education.degree,
+    duration: isSchoolEntry(education) ? 'Unknown' : education.date,
+    description: isSchoolEntry(education) ? 'Unknown' : education.desc,
     logo: education.img,
-    gpa: education.grade,
+    gpa: isSchoolEntry(education) ? 'Unknown' : education.grade,
     order: education.id + 1,
   })),
   projects: projects.map((project) => ({
