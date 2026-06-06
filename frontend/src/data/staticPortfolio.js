@@ -46,12 +46,12 @@ export const staticPortfolio = {
   })),
   education: educationItems.map((education) => ({
     _id: `static-education-${education.id}`,
-    institution: isSchoolEntry(education) ? 'Test School' : education.school,
-    degree: isSchoolEntry(education) ? 'Unknown' : education.degree,
-    duration: isSchoolEntry(education) ? 'Unknown' : education.date,
-    description: isSchoolEntry(education) ? 'Unknown' : education.desc,
+    institution: isSchoolEntry(education) ? 'Test School' : 'Unknown',
+    degree: 'Unknown',
+    duration: 'Unknown',
+    description: 'Unknown',
     logo: education.img,
-    gpa: isSchoolEntry(education) ? 'Unknown' : education.grade,
+    gpa: 'Unknown',
     order: education.id + 1,
   })),
   projects: projects.map((project) => ({
