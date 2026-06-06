@@ -43,7 +43,9 @@ export const staticPortfolio = {
   })),
   education: educationItems.map((education) => ({
     _id: `static-education-${education.id}`,
-    institution: education.school,
+    institution: education.school.includes('Vatsalya Public School')
+      ? 'Test School'
+      : education.school,
     degree: education.degree,
     duration: education.date,
     description: education.desc,
