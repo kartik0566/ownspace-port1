@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import {
   BrowserRouter as Router,
-  Navigate,
   Route,
   Routes,
   useParams,
@@ -20,6 +19,9 @@ import { portfolioAPI } from './utils/api';
 import { useFetch } from './utils/hooks';
 import './App.css';
 
+const defaultPortfolioUsername =
+  import.meta.env.VITE_PORTFOLIO_USERNAME || 'kartik';
+
 function PortfolioNotice({ title, message }) {
   return (
     <div className="App min-h-screen bg-[#050414] text-white">
@@ -35,7 +37,7 @@ function PortfolioNotice({ title, message }) {
 
 function PortfolioPage() {
   const { username } = useParams();
-  const portfolioUsername = username || '';
+  const portfolioUsername = username || defaultPortfolioUsername;
   const fetchPortfolio = useCallback(
     () =>
       portfolioUsername
@@ -95,7 +97,7 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/:username" element={<PortfolioPage />} />
-        <Route path="/" element={<Navigate to="/admin/login" replace />} />
+        <Route path="/" element={<PortfolioPage />} />
       </Routes>
     </Router>
   );

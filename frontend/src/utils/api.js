@@ -1,5 +1,36 @@
+import {
+  getStaticPortfolio,
+  staticPortfolioUsername,
+} from '../data/staticPortfolio';
+
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? '' : 'http://localhost:5000/api');
+
+export const isStaticPortfolioMode = () =>
+  import.meta.env.VITE_STATIC_PORTFOLIO === 'true' || !API_BASE_URL;
+
+const getPublicPortfolio = (username = staticPortfolioUsername) => {
+  const portfolio = getStaticPortfolio(username || staticPortfolioUsername);
+
+  if (!portfolio) {
+    throw new Error('No public portfolio exists for this username.');
+  }
+
+  return portfolio;
+};
+
+const publicRequest = (staticSelector, apiRequest) => {
+  if (isStaticPortfolioMode()) {
+    try {
+      return Promise.resolve(staticSelector());
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  return apiRequest();
+};
 
 const withUsername = (endpoint, username) => {
   if (!username) return endpoint;
@@ -9,6 +40,10 @@ const withUsername = (endpoint, username) => {
 };
 
 export const apiCall = async (endpoint, options = {}) => {
+  if (!API_BASE_URL) {
+    throw new Error('Backend API is not configured for this deployment.');
+  }
+
   const token = localStorage.getItem('token');
   const { username, ...fetchOptions } = options;
   const headers = {
@@ -38,7 +73,11 @@ export const apiCall = async (endpoint, options = {}) => {
 };
 
 export const skillsAPI = {
-  getAll: (username) => apiCall('/skills', { username }),
+  getAll: (username) =>
+    publicRequest(
+      () => getPublicPortfolio(username).skills,
+      () => apiCall('/skills', { username })
+    ),
   add: (data) =>
     apiCall('/skills', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) =>
@@ -47,7 +86,11 @@ export const skillsAPI = {
 };
 
 export const experienceAPI = {
-  getAll: (username) => apiCall('/experience', { username }),
+  getAll: (username) =>
+    publicRequest(
+      () => getPublicPortfolio(username).experience,
+      () => apiCall('/experience', { username })
+    ),
   add: (data) =>
     apiCall('/experience', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) =>
@@ -56,7 +99,11 @@ export const experienceAPI = {
 };
 
 export const educationAPI = {
-  getAll: (username) => apiCall('/education', { username }),
+  getAll: (username) =>
+    publicRequest(
+      () => getPublicPortfolio(username).education,
+      () => apiCall('/education', { username })
+    ),
   add: (data) =>
     apiCall('/education', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) =>
@@ -65,7 +112,11 @@ export const educationAPI = {
 };
 
 export const projectsAPI = {
-  getAll: (username) => apiCall('/projects', { username }),
+  getAll: (username) =>
+    publicRequest(
+      () => getPublicPortfolio(username).projects,
+      () => apiCall('/projects', { username })
+    ),
   add: (data) =>
     apiCall('/projects', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) =>
@@ -74,18 +125,41 @@ export const projectsAPI = {
 };
 
 export const aboutAPI = {
-  get: (username) => apiCall('/about', { username }),
+  get: (username) =>
+    publicRequest(
+      () => getPublicPortfolio(username).about,
+      () => apiCall('/about', { username })
+    ),
   update: (data) =>
     apiCall('/about', { method: 'PUT', body: JSON.stringify(data) }),
 };
 
 export const contactAPI = {
-  submit: (data, username) =>
-    apiCall('/contact', {
+  submit: (data, username) => {
+    if (isStaticPortfolioMode()) {
+      const { about } = getPublicPortfolio(username);
+
+      if (!about.email) {
+        throw new Error('Contact email is not configured.');
+      }
+
+      const subject = encodeURIComponent(
+        `Portfolio message from ${data.name || 'Visitor'}`
+      );
+      const body = encodeURIComponent(
+        `${data.message || ''}\n\nFrom: ${data.name || ''} <${data.email || ''}>`
+      );
+
+      window.location.href = `mailto:${about.email}?subject=${subject}&body=${body}`;
+      return Promise.resolve({ mailTo: true });
+    }
+
+    return apiCall('/contact', {
       method: 'POST',
       username,
       body: JSON.stringify(data),
-    }),
+    });
+  },
   getAll: () => apiCall('/contact'),
   update: (id, data) =>
     apiCall(`/contact/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
@@ -93,7 +167,11 @@ export const contactAPI = {
 };
 
 export const portfolioAPI = {
-  get: (username) => apiCall(`/portfolio/${username}`),
+  get: (username) =>
+    publicRequest(
+      () => getPublicPortfolio(username),
+      () => apiCall(`/portfolio/${username}`)
+    ),
 };
 
 export const authAPI = {

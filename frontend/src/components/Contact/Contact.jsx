@@ -22,7 +22,7 @@ const Contact = ({ username }) => {
     setIsSubmitting(true);
 
     try {
-      await contactAPI.submit(
+      const result = await contactAPI.submit(
         {
           name: formData.name,
           email: formData.email,
@@ -33,7 +33,7 @@ ${formData.message}`,
         username
       );
 
-      toast.success('Message submitted successfully! ✅', {
+      toast.success(result?.mailTo ? 'Opening your email app...' : 'Message submitted successfully!', {
         position: 'top-right',
         autoClose: 3000,
         hideProgressBar: false,
@@ -74,7 +74,7 @@ ${formData.message}`,
 
       <div className="mt-8 w-full max-w-md bg-[#0d081f] p-6 rounded-lg shadow-lg border border-gray-700">
         <h3 className="text-xl font-semibold text-white text-center">
-          Connect With Me <span className="ml-1">🚀</span>
+          Connect With Me
         </h3>
 
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col space-y-4">
